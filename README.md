@@ -1,34 +1,24 @@
-# acmehealth-server
-Node Server for CRUD API Management Operations
+# ice-resource-server
 
-## Project Setup In a Nutshell
-### Download Cocoapods (ruby)
-```$ sudo gem intall cocoapods```
-### Install NodeJS
-```$ brew install node```
-### Clone Repositories
-#### Server
-```$ git clone git@github.com:jmelberg/acmehealth-server.git```
-#### SPA
-```$ git clone git@github.com:jmelberg/acmehealth-spa.git```
-#### iOS
-```$ git clone git@github.com:jmelberg/acmehealth-swift.git```
-### Install Repository Dependencies
-**Note:** Version 6.9.4 is the latest supported vision of Node. You can install this using the [n]() package.
-```
-$ npm install -g n
-$ n 6.9.4
-```
-#### Server
-``` $ npm install --no-optional```
-#### SPA
-``` $ npm install http-server -g```
-#### iOS
-``` $ pod install```   (Takes some time)
-### Run the Project
-#### Server:
-``` $ node server.js --iss "https://example.oktapreview.com/oauth2/aus7xbiefo72YS2QW0h7" --aud "http://localhost:8080"```
-#### SPA:
-```$ http-server```
-#### iOS:
-Open `OpenIDConnectSwift.xcworkspace` -> Run 
+This Resource Server makes Ice customers happy.
+
+![Ice Icon](img/IceIcon_120px.png)
+
+## Run this App
+
+### Option 1: Heroku
+
+1. Click [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+2. Login or create your Heroku account.
+
+### Option 2: In my house
+
+1. Install `git` and `node` in your computer.
+2. Clone this repo:
+    `$ git clone git@github.com/fhakamine/ice-resource-server.git`
+
+3. Install Node dependencies:
+    `npm install --no-optional`
+
+4. Run the Project:
+    `node server.js --iss "https://example.okta.com/oauth2/aus7xbiefo72YS2QW0h7" --aud "http://api.example.com"`

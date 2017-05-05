@@ -1,7 +1,7 @@
 {
-  "name": "acme-health-server",
+  "name": "ice-resource-server",
   "version": "1.0.0",
-  "description": "REST API for Okta Acme Health",
+  "description": "Resource Server to make Ice customers happy",
   "main": "server.js",
   "private": true,
   "scripts": {
@@ -15,5 +15,8 @@
     "passport-restify": "^1.0.1",
     "restify": "^4.1.1",
     "yargs": "^5.0.0"
+  },
+  "engines": {
+    "node": "6.10.0"
   }
 }

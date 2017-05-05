@@ -1,0 +1,19 @@
+{
+  "name": "ICE Resource Server",
+  "description": "To make ICE customers happy",
+  "repository": "https://github.com/fhakamine/ice-resource-server",
+  "logo": "https://github.com/fhakamine/ice-resource-server/blob/master/img/IceIcon_120px.png",
+  "keywords": ["Okta", "Resource Server", "OAuth2", "PassportJS"],
+  "env": {
+  "ISSUER": {
+    "description": "Who's issuing the JWT tokens. For example: https://example.okta.com",
+    "required": false,
+    "value": "https://example.okta.com"
+  },
+  "AUDIENCE": {
+    "description": "The JWT token audience to be validated",
+    "required": false,
+    "value": "https://api.ice.com"
+  }
+},
+}

@@ -1,19 +1,19 @@
 /*  Authors: Karl McGuinness & Jordan Melberg */
 /** Copyright © 2016, Okta, Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 var yargs = require('yargs');
 var url = require('url');
 var restify = require('restify');
@@ -124,9 +124,9 @@ server.post({path: '/appointments'}, function(req, res, next) {
   try {
     res.send(201, newAppointment);
   } catch (err) { res.send(400, err); }
-  
+
   return next();
-  
+
 });
 
 // Update appointment
@@ -142,7 +142,7 @@ server.put({path: '/appointments/:_id'},
 
       // Remove param from json
       delete editAppointment["_id"];
-      
+
       try {
         appointments.update(editAppointment);
         res.send(200, editAppointment);
@@ -161,7 +161,7 @@ server.del({path: '/appointments/:id'},
       appointments.remove(removeAppointment);
       res.send(204);
     } catch (err) { res.send(404, err);  }
-    
+
     return next();
   });
 
@@ -180,7 +180,7 @@ server.get({path: '/appointments/:filter'},
     var all = appointments.chain().find({}).data();
     console.log(JSON.stringify(all, null, 4));
     res.send(200, patientQuery);
-    
+
     return next();
   });
 
@@ -221,10 +221,11 @@ server.get({path: '/delete'},
     var removeAll = appointments.chain().remove();
     console.log("Removed all entries from database");
     res.send(204);
-    
+
     return next();
   });
 
-server.listen(8088, '0.0.0.0', function() {
+var port = (process.env.PORT || 5000);
+server.listen(port, '0.0.0.0', function() {
   log.info('listening: %s', server.url);
 });
