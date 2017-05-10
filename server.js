@@ -1,17 +1,6 @@
-/*  Authors: Karl McGuinness & Jordan Melberg */
-/** Copyright © 2016, Okta, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ * This file is subject to the terms and conditions defined in
+ * file 'LICENSE.MD' which is part of this source code package.
  */
 
 var yargs = require('yargs');
@@ -22,10 +11,7 @@ var passport = require('passport-restify');
 var Strategy = require('passport-oauth2-jwt-bearer').Strategy;
 var bunyan = require('bunyan');
 
-/**
- * Parse Arguments
- */
-
+// Parse Arguments
 var argv = yargs
 .usage('\nLaunches Acme Health REST Resource Server\n\n' +
 'Usage:\n\t$0 -iss {issuer} -aud {audience}', {
@@ -43,14 +29,11 @@ var argv = yargs
     string: true
   }
 })
-.example('\t$0 --aud https://example.oktapreview.com/as/aus7xbiefo72YS2QW0h7 --aud http://api.example.com', '')
+.example('\t$0 --aud https://example.okta.com/as/aus7xbiefo72YS2QW0h7 --aud http://api.example.com', '')
 .argv;
 
 
-/**
- * Globals
- */
-
+//Globals
 var log = new bunyan.createLogger({name: 'acme-health-server'});
 
 var strategy = new Strategy(
@@ -60,7 +43,6 @@ var strategy = new Strategy(
     metadataUrl: argv.issuer + '/.well-known/oauth-authorization-server',
     loggingLevel: 'debug'
   }, function(token, done) {
-    // done(err, user, info)
     return done(null, token);
   });
 
@@ -70,20 +52,17 @@ var server = restify.createServer(
     serializers: restify.bunyan.serializers
   });
 
-// Local DB
-var db = new loki('AcmeHealth');
-var appointments = db.addCollection('appointments', {});
+//In-memory DB
+var db = new loki('ice');
+var promos = db.addCollection('promos', {unique: 'code'});
 
-/**
- * Middleware Configuration
- */
-
+//Middleware Configuration
 server.use(restify.requestLogger());
 server.use(restify.bodyParser());
 server.use(passport.initialize());
 passport.use(strategy);
 
-// Add CORS Access
+//Add CORS Access
 server.use(restify.CORS());
 restify.CORS.ALLOW_HEADERS.push("authorization");
 restify.CORS.ALLOW_HEADERS.push("withcredentials");
@@ -100,125 +79,81 @@ restify.CORS.ALLOW_HEADERS.push("content-type");
 
 server.on('after', restify.auditLogger({log: log}));
 
-/**
- * Routes
- */
+// API Routes
 
-// Post appointment
-server.post({path: '/appointments'}, function(req, res, next) {
-  var newAppointment = req.params;
+// Add Promos
+// Scope Required: 'promos:create'
+server.post({path: '/promos'},
+  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:create']}),
+  function respond(req, res, next) {
+  var promo = req.params;
+  //Set Promo dates
+  promo.created = new Date();
+  promo.lastUpdated = new Date();
+  promo.startDate = new Date();
+  var endTime = new Date();
+  var validFor = promo.validFor;
+  if(validFor == null) { validFor = 30; }
+  promo.endDate = new Date(endTime.setDate(endTime.getDate() + validFor));
+  if(promo.target == null) { promo.target = "EVERYBODY"; }
 
-  // Update required schema fields
-  newAppointment.status = "REQUESTED";
-  newAppointment.created = new Date();
-  newAppointment.lastUpdated = new Date();
-  newAppointment.startTime = new Date(req.params.startTime);
-  newAppointment.location = "Office";
-
-  // Format endTime
-  var endTime = new Date(newAppointment.startTime);
-  newAppointment.endTime = new Date(endTime.setHours(endTime.getHours() + 1));
-
-  // Insert into DB
-  var insertAppointment = appointments.insert( newAppointment );
+  // Save to DB
+  var addPromo = promos.insert( promo );
   try {
-    res.send(201, newAppointment);
+    res.send(201, promo);
   } catch (err) { res.send(400, err); }
 
   return next();
-
 });
 
-// Update appointment
-// Scopes Required: 'appointments:confirm' AND/OR 'appointments:cancel' AND/OR 'appointments:edit'
-server.put({path: '/appointments/:_id'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false,
-    scopes: ['appointments:confirm'] || ['appointments:cancel'] || ['appointments:edit'] }),
+// Get all Promos
+// Scope Required: 'promos:read'
+server.get({path: '/promos'},
+  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+  function respond(req, res, next) {
+    var query = promos.chain().find({}).simplesort('code').data();
+    res.send(200, query);
+
+    return next();
+  });
+
+// Search Promos
+// Scope Required: 'promos:read'
+server.get({path: '/promos/:filter'},
+  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+  function respond(req, res, next) {
+    var query = promos.chain().find(
+      {
+        $or: [
+          {'code' : req.params.filter},
+          {'target' : req.params.filter}
+        ]
+      }).data();
+    console.log("\n\nPromos: " + query + "\n\n");
+    res.send(200, query);
+
+    return next();
+  });
+
+// Delete promo
+// Scope Required: 'promos:cancel'
+server.del({path: '/promos/:code'},
+  //passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:cancel'] }),
   function response(req, res, next) {
-
-      // Manually update "lastUpdated" field
-      var editAppointment = req.params;
-      editAppointment.lastUpdated = new Date();
-
-      // Remove param from json
-      delete editAppointment["_id"];
-
-      try {
-        appointments.update(editAppointment);
-        res.send(200, editAppointment);
-      } catch (err) {  res.send(400, err);  }
-
-      return next();
-    });
-
-// Delete appointment
-// Scope Required: 'appointments:cancel'
-server.del({path: '/appointments/:id'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['appointments:cancel'] }),
-  function response(req, res, next) {
-    var removeAppointment = appointments.get(req.params.id);
+    var removePromo = promos.find({'code' : req.params.code});
+    //var removePromo = promos.get(req.params.code);
     try {
-      appointments.remove(removeAppointment);
+      promos.remove(removePromo);
       res.send(204);
     } catch (err) { res.send(404, err);  }
 
     return next();
   });
 
-// Scope Required: 'appointments:read'
-server.get({path: '/appointments/:filter'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['appointments:read']}),
-  function respond(req, res, next) {
-    var patientQuery = appointments.chain().find(
-      {
-        $or: [
-          {'patientId' : req.params.filter},
-          {'providerId' : req.params.filter}
-        ]
-      }).data();
-    console.log("\n\nPatients: " + patientQuery + "\n\n");
-    var all = appointments.chain().find({}).data();
-    console.log(JSON.stringify(all, null, 4));
-    res.send(200, patientQuery);
-
-    return next();
-  });
-
-// Return available providers
-// Scope Required: 'providers:read'
-server.get({path: '/providers'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['providers:read'] }),
-  function respond(req, res, next) {
-
-    // Id given is Okta user_id/sub
-    res.send(200,
-      [
-        {
-          "id" : "00u7vh4zm1l7YIjPB0h7",
-          "name" : "Dr. John Doe",
-          "profileImageUrl" : "https://raw.githubusercontent.com/jmelberg/acmehealth-swift/master/AcmeHealth/Assets.xcassets/0000001.imageset/0000001.png"
-        },
-        {
-          "id" : "00u7vg8f6mBaaa8cw0h7",
-          "name" : "Dr. Jane Doe",
-          "profileImageUrl" : "https://raw.githubusercontent.com/jmelberg/acmehealth-swift/master/AcmeHealth/Assets.xcassets/0000002.imageset/0000002.png"
-        },
-        {
-          "id" : "00u7vfod51Q0RBghC0h7",
-          "name" : "Dr. Richard Roe",
-          "profileImageUrl" : "https://raw.githubusercontent.com/jmelberg/acmehealth-swift/master/AcmeHealth/Assets.xcassets/0000003.imageset/0000003.png"
-        }
-      ]
-    );
-
-    return next();
-  }
-  );
-
 // Delete all from db
 server.get({path: '/delete'},
   function respond(req, res, next) {
-    var removeAll = appointments.chain().remove();
+    var removeAll = promos.chain().remove();
     console.log("Removed all entries from database");
     res.send(204);
 
