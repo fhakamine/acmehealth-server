@@ -34,7 +34,7 @@ var argv = yargs
 
 
 //Globals
-var log = new bunyan.createLogger({name: 'acme-health-server'});
+var log = new bunyan.createLogger({name: 'ice-resource-server'});
 
 var strategy = new Strategy(
   {
@@ -75,7 +75,6 @@ restify.CORS.ALLOW_HEADERS.push("host");
 restify.CORS.ALLOW_HEADERS.push("accept");
 restify.CORS.ALLOW_HEADERS.push("connection");
 restify.CORS.ALLOW_HEADERS.push("content-type");
-
 
 server.on('after', restify.auditLogger({log: log}));
 
