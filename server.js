@@ -83,7 +83,7 @@ server.on('after', restify.auditLogger({log: log}));
 // Add Promos
 // Scope Required: 'promos:create'
 server.post({path: '/promos'},
-  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:create']}),
+  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:create']}),
   function respond(req, res, next) {
   var promo = req.params;
   //Set Promo dates
@@ -135,9 +135,9 @@ server.get({path: '/promos/:filter'},
   });
 
 // Delete promo
-// Scope Required: 'promos:cancel'
+// Scope Required: 'promos:delete'
 server.del({path: '/promos/:code'},
-  //passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:cancel'] }),
+  //passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:delete'] }),
   function response(req, res, next) {
     var removePromo = promos.find({'code' : req.params.code});
     //var removePromo = promos.get(req.params.code);

@@ -1,7 +1,7 @@
 {
-  "name": "ICE Resource Server",
+  "name": "ICE Client App",
   "description": "To make ICE customers happy",
-  "repository": "https://github.com/fhakamine/ice-resource-server",
+  "repository": "https://github.com/fhakamine/ice-client-app",
   "logo": "https://github.com/fhakamine/ice-resource-server/blob/master/img/IceIcon_120px.png",
   "keywords": ["Okta", "Resource Server", "OAuth2", "PassportJS"],
   "env": {
