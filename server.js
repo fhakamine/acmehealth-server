@@ -119,7 +119,7 @@ server.get({path: '/promos'},
 // Search Promos
 // Scope Required: 'promos:read'
 server.get({path: '/promos/:filter'},
-  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
   function respond(req, res, next) {
     var query = promos.chain().find(
       {
