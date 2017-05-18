@@ -10,6 +10,9 @@ This Resource Server makes Ice customers happy.
 
 1. Click [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 2. Login or create your Heroku account.
+3. After deployment, go to settings.
+4. Update the **ISSUER** with the OAuth Authorization Server that issues JWT token - for example, https://ice.oktapreview.com/oauth2/abcdef123456.
+4. Update the **AUDIENCE** with the API that's the intended recipient of the JWT token. In heroku, this is your app url - for example, https://ice-rs-fredericohakamine.herokuapp.com".
 
 ### Option 2: In my house
 
@@ -21,4 +24,4 @@ This Resource Server makes Ice customers happy.
     `npm install --no-optional`
 
 4. Run the Project:
-    `node server.js --iss "https://example.okta.com/oauth2/aus7xbiefo72YS2QW0h7" --aud "http://api.example.com"`
+    `node server.js --iss "https://ice.oktapreview.com/oauth2/abcdef123456" --aud "http://localhost:5000"`
