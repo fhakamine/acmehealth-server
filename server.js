@@ -1,8 +1,3 @@
-/*
- * This file is subject to the terms and conditions defined in
- * file 'LICENSE' which is part of this source code package.
- */
-
 var yargs = require('yargs');
 var url = require('url');
 var restify = require('restify');
@@ -13,7 +8,7 @@ var bunyan = require('bunyan');
 
 // Parse Arguments
 var argv = yargs
-.usage('\nLaunches Acme Health REST Resource Server\n\n' +
+.usage('\nLaunches the ICE Resource Server\n\n' +
 'Usage:\n\t$0 -iss {issuer} -aud {audience}', {
   issuer: {
     description: 'Issuer URI for Authorization Server',
@@ -108,7 +103,7 @@ server.post({path: '/promos'},
 // Get all Promos
 // Scope Required: 'promos:read'
 server.get({path: '/promos'},
-  //passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
   function respond(req, res, next) {
     var query = promos.chain().find({}).simplesort('code').data();
     res.send(200, query);
