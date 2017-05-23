@@ -111,6 +111,15 @@ server.get({path: '/promos'},
     return next();
   });
 
+  // Get public Promos
+  server.get({path: '/publicpromos'},
+  function respond(req, res, next) {
+    var query = promos.chain().find({'target' : 'PUBLIC'}).data();
+    console.log("\n\nPromos: " + query + "\n\n");
+    res.send(200, query);
+    return next();
+  });
+
 // Search Promos
 // Scope Required: 'promos:read'
 server.get({path: '/promos/:filter'},
