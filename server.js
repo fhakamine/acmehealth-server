@@ -141,7 +141,7 @@ server.get({path: '/promos/:filter'},
 // Delete promo
 // Scope Required: 'promos:delete'
 server.del({path: '/promos/:code'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:cancel'] }),
+  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:delete'] }),
   function response(req, res, next) {
     var removePromo = promos.find({'code' : req.params.code});
     //var removePromo = promos.get(req.params.code);
@@ -155,7 +155,7 @@ server.del({path: '/promos/:code'},
 
 // Delete all from db
 server.get({path: '/delete'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:cancel'] }),
+  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:delete'] }),
   function respond(req, res, next) {
     var removeAll = promos.chain().remove();
     console.log("Removed all entries from database");
