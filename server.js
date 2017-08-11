@@ -30,7 +30,6 @@ var argv = yargs
 
 //Globals
 var log = new bunyan.createLogger({name: 'ice-resource-server'});
-
 var strategy = new Strategy(
   {
     audience: argv.audience,
@@ -47,9 +46,15 @@ var server = restify.createServer(
     serializers: restify.bunyan.serializers
   });
 
-//In-memory DB
+//BEGIN: STARTS IN-MEMORY DB (LOKIJS) AND SEED DATA
 var db = new loki('ice');
 var promos = db.addCollection('promos', {unique: 'code'});
+var validity = 30;
+var endPromo = new Date();
+endPromo.setDate(endPromo.getDate() + validity);
+promos.insert({ code: "WILLY-VANILLY", validFor: validity, target: "PUBLIC", endDate: endPromo.toDateString(), description: "Public customers get 15% off the new Vanilla collection" });
+promos.insert({ code: "PREMIUM-ROCKS", validFor: validity, target: "PREMIUM", endDate: endPromo.toDateString(), description: "Premium customers get 50% off on all flavors" });
+//END: STARTS IN-MEMORY DB (LOKIJS) AND SEED DATA
 
 //Middleware Configuration
 server.use(restify.requestLogger());
@@ -73,96 +78,38 @@ restify.CORS.ALLOW_HEADERS.push("content-type");
 
 server.on('after', restify.auditLogger({log: log}));
 
-// API Routes
+//API Routes
 
-// Add Promos
-// Scope Required: 'promos:create'
-server.post({path: '/promos'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:create']}),
-  function respond(req, res, next) {
-  var promo = req.params;
-  //Set Promo dates
-  promo.created = new Date();
-  promo.lastUpdated = new Date();
-  promo.startDate = new Date();
-  var endTime = new Date();
-  var validFor = promo.validFor;
-  if(validFor == null) { validFor = 30; }
-  promo.endDate = new Date(endTime.setDate(endTime.getDate() + validFor));
-  if(promo.target == null) { promo.target = "EVERYBODY"; }
-
-  // Save to DB
-  var addPromo = promos.insert( promo );
-  try {
-    res.send(201, promo);
-  } catch (err) { res.send(400, err); }
-
+//Get public Promos
+server.get({path: '/promos/PUBLIC'},
+           function respond(req, res, next) {
+  var query = promos.chain().find({'target' : 'PUBLIC'}).data();
+  res.send(200, query);
   return next();
 });
 
 // Get all Promos
-// Scope Required: 'promos:read'
+// OAuth Scope Required: 'promos:read'
 server.get({path: '/promos'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
-  function respond(req, res, next) {
-    var query = promos.chain().find({}).simplesort('code').data();
-    res.send(200, query);
-
-    return next();
-  });
-
-  // Get public Promos
-  server.get({path: '/publicpromos'},
-  function respond(req, res, next) {
-    var query = promos.chain().find({'target' : 'PUBLIC'}).data();
-    console.log("\n\nPromos: " + query + "\n\n");
-    res.send(200, query);
-    return next();
-  });
+           passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+           function respond(req, res, next) {
+  var query = promos.chain().find({}).simplesort('code').data();
+  res.send(200, query);
+  return next();
+});
 
 // Search Promos
-// Scope Required: 'promos:read'
+// OAuth Scope Required: 'promos:read'
 server.get({path: '/promos/:filter'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
-  function respond(req, res, next) {
-    var query = promos.chain().find(
-      {
-        $or: [
-          {'code' : req.params.filter},
-          {'target' : req.params.filter}
-        ]
-      }).data();
-    console.log("\n\nPromos: " + query + "\n\n");
-    res.send(200, query);
-
-    return next();
-  });
-
-// Delete promo
-// Scope Required: 'promos:delete'
-server.del({path: '/promos/:code'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:delete'] }),
-  function response(req, res, next) {
-    var removePromo = promos.find({'code' : req.params.code});
-    //var removePromo = promos.get(req.params.code);
-    try {
-      promos.remove(removePromo);
-      res.send(204);
-    } catch (err) { res.send(404, err);  }
-
-    return next();
-  });
-
-// Delete all from db
-server.get({path: '/delete'},
-  passport.authenticate('oauth2-jwt-bearer', { session: false, scopes: ['promos:delete'] }),
-  function respond(req, res, next) {
-    var removeAll = promos.chain().remove();
-    console.log("Removed all entries from database");
-    res.send(204);
-
-    return next();
-  });
+           passport.authenticate('oauth2-jwt-bearer', { session: false , scopes: ['promos:read']}),
+           function respond(req, res, next) {
+  var query = promos.chain().find({ $or: [
+                                    {'code' : req.params.filter},
+                                    {'target' : req.params.filter}
+                                  ]}).data();
+  res.send(200, query);
+  return next();
+});
 
 var port = (process.env.PORT || 5000);
 server.listen(port, '0.0.0.0', function() {
