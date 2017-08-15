@@ -52,7 +52,7 @@ var promos = db.addCollection('promos', {unique: 'code'});
 var validity = 30;
 var endPromo = new Date();
 endPromo.setDate(endPromo.getDate() + validity);
-promos.insert({ code: "WILLY-VANILLY", validFor: validity, target: "PUBLIC", endDate: endPromo.toDateString(), description: "Public customers get 15% off the new Vanilla collection" });
+promos.insert({ code: "WILLY-VANILLA", validFor: validity, target: "PUBLIC", endDate: endPromo.toDateString(), description: "Public customers get 15% off the new Vanilla collection" });
 promos.insert({ code: "PREMIUM-ROCKS", validFor: validity, target: "PREMIUM", endDate: endPromo.toDateString(), description: "Premium customers get 50% off on all flavors" });
 //END: STARTS IN-MEMORY DB (LOKIJS) AND SEED DATA
 
